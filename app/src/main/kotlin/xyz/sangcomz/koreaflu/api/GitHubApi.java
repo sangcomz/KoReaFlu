@@ -9,10 +9,8 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
-import retrofit2.http.Path;
 import rx.Observable;
 import xyz.sangcomz.koreaflu.flux.model.GitHubRepo;
-import xyz.sangcomz.koreaflu.flux.model.GitHubUser;
 
 /**
  * Created by marcel on 09/10/15.
@@ -23,9 +21,6 @@ public interface GitHubApi {
 
     @GET("/repositories")
     Observable<ArrayList<GitHubRepo>> getRepositories();
-
-    @GET("/users/{id}")
-    Observable<GitHubUser> getUser(@Path("id") String userId);
 
     class Factory {
         private static GitHubApi instance;

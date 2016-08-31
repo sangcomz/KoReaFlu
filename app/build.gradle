@@ -26,15 +26,6 @@ android {
         test.java.srcDirs += 'src/test/kotlin'
         androidTest.java.srcDirs += 'src/androidTest/kotlin'
     }
-
-    Properties props = new Properties()
-    props.load(new FileInputStream(file('../local.properties')))
-    def githubToken = props.getProperty("github.token", "\"\"")
-    def githubUser = props.getProperty("github.user", "\"sangcomz\"")
-    applicationVariants.all { variant ->
-        variant.buildConfigField "String", "GITHUB_TOKEN", githubToken
-        variant.buildConfigField "String", "GITHUB_USER", githubUser
-    }
 }
 
 dependencies {
@@ -54,8 +45,6 @@ dependencies {
 
 
     compile 'io.reactivex:rxandroid:1.2.1'
-    // Because RxAndroid releases are few and far between, it is recommended you also
-    // explicitly depend on RxJava's latest version for bug fixes and new features.
     compile 'io.reactivex:rxjava:1.1.9'
 
 
@@ -90,7 +79,3 @@ apply plugin: 'realm-android'
 repositories {
     mavenCentral()
 }
-
-//kapt {
-//    generateStubs = true
-//}
