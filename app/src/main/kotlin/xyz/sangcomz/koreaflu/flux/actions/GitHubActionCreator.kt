@@ -1,28 +1,47 @@
+package xyz.sangcomz.koreaflu.flux.actions
+
+
+import android.util.Log
 import com.hardsoftstudio.rxflux.action.RxAction
 import com.hardsoftstudio.rxflux.action.RxActionCreator
 import com.hardsoftstudio.rxflux.dispatcher.Dispatcher
 import com.hardsoftstudio.rxflux.util.SubscriptionManager
+import io.realm.Realm
+import io.realm.RealmResults
+import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import xyz.sangcomz.koreaflu.api.GitHubApi
-import xyz.sangcomz.koreaflu.flux.actions.Actions
-import xyz.sangcomz.koreaflu.flux.actions.Keys
+import xyz.sangcomz.koreaflu.flux.model.GitHubRepo
 
 class GitHubActionCreator(dispatcher: Dispatcher, manager: SubscriptionManager) :
         RxActionCreator(dispatcher, manager), Actions {
     override fun getPublicRepositories() {
-        val action = newRxAction(GET_PUBLIC_REPOS)
+        Log.d("GitHubActionCreator", "getPublicRepositories")
+        val action = newRxAction(Keys.ACTION_GET_PUBLIC_REPOS)
         if (hasRxAction(action)) return
+
         addRxAction(action,
                 GitHubApi
                         .Factory
                         .getApi()
                         .repositories
-                        .subscribeOn(Schedulers.io())
+                        .subscribeOn(Schedulers.newThread())
+                        .map {
+                            Log.d("GitHubActionCreator", "repo size = ${it.size}")
+                            val mRealm: Realm = Realm.getDefaultInstance()
+                            mRealm.beginTransaction()
+                            mRealm.insertOrUpdate(it)
+                            mRealm.commitTransaction()
+                        }
                         .observeOn(AndroidSchedulers.mainThread())
+                        .flatMap {
+                            getRepoListInRealmObservable()
+                        }
                         .subscribe({
                             repoList ->
-                            postRxAction(newRxAction(GET_PUBLIC_REPOS,
+                            Log.d("GitHubActionCreator", "repoList size = ${repoList.size}")
+                            postRxAction(newRxAction(Keys.ACTION_GET_PUBLIC_REPOS,
                                     Keys.PUBLIC_REPOS,
                                     repoList))
                         }, {
@@ -31,40 +50,26 @@ class GitHubActionCreator(dispatcher: Dispatcher, manager: SubscriptionManager) 
                         }))
     }
 
-    override fun getUserDetails(userId: String) {
-        val action = newRxAction(GET_USER, Keys.ID, userId)
-        if (hasRxAction(action)) return
-
-        addRxAction(action,
-                GitHubApi
-                        .Factory
-                        .getApi()
-                        .getUser(userId)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe({ user ->
-                            action.data.put(Keys.USER, user)
-                            postRxAction(action)
-                        })
-                        { throwable ->
-                            postError(action, throwable)
-                        })
-    }
-
     override fun retry(action: RxAction): Boolean {
         if (hasRxAction(action)) return true
-
         when (action.type) {
-            GET_USER -> {
-                getUserDetails(action.get(Keys.ID))
-                return true
-            }
-            GET_PUBLIC_REPOS -> {
+            Keys.ACTION_GET_PUBLIC_REPOS -> {
                 getPublicRepositories()
                 return true
             }
         }
         return false
+    }
+
+    private fun getRepoListInRealmObservable(): Observable<RealmResults<GitHubRepo>>? {
+        Log.d("GitHubActionCreator", "getRepoListInRealmObservable")
+        val mRealm: Realm = Realm.getDefaultInstance()
+        return mRealm
+                .where(GitHubRepo::class.java)
+                .findAll()
+                .asObservable()
+
+
     }
 
 }
