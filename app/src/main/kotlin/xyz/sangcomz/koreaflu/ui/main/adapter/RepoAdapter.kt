@@ -33,6 +33,7 @@ class RepoAdapter(_repoList: RealmResults<GitHubRepo>) : RecyclerView.Adapter<Re
         fun bindForecast(repo: GitHubRepo) {
             with(repo) {
                 view.text_full_name.text = repo.fullName
+                view.text_description.text = repo.description
             }
         }
     }
