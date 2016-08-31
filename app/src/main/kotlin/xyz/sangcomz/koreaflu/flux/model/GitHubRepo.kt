@@ -15,6 +15,5 @@ open class GitHubRepo : RealmObject() {
     open var id: Int = 0
     open var name: String? = null
     open @SerializedName("full_name") var fullName: String? = null
-    open var owner: GitHubUser? = null
     open var description: String? = null
 }

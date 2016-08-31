@@ -20,7 +20,6 @@ class GitHubActionCreator(dispatcher: Dispatcher, manager: SubscriptionManager) 
         Log.d("GitHubActionCreator", "getPublicRepositories")
         val action = newRxAction(Keys.ACTION_GET_PUBLIC_REPOS)
         if (hasRxAction(action)) return
-
         addRxAction(action,
                 GitHubApi
                         .Factory
@@ -44,9 +43,11 @@ class GitHubActionCreator(dispatcher: Dispatcher, manager: SubscriptionManager) 
                             postRxAction(newRxAction(Keys.ACTION_GET_PUBLIC_REPOS,
                                     Keys.PUBLIC_REPOS,
                                     repoList))
+                            removeRxAction(action)
                         }, {
                             throwable ->
                             postError(action, throwable)
+                            removeRxAction(action)
                         }))
     }
 

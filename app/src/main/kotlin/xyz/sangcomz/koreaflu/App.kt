@@ -30,7 +30,6 @@ class App : Application() {
     fun initGitHubActionCreator() {
         rxFlux?.let {
             githubActionCreator = GitHubActionCreator(it.dispatcher, it.subscriptionManager)
-
         }
     }
 

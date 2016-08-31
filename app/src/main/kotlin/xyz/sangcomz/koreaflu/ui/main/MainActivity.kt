@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import com.hardsoftstudio.rxflux.action.RxError
 import com.hardsoftstudio.rxflux.dispatcher.RxViewDispatch
 import com.hardsoftstudio.rxflux.store.RxStore
@@ -27,7 +30,34 @@ class MainActivity : AppCompatActivity(), RxViewDispatch {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initAction()
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        refresh()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        item?.let {
+            val id = it.itemId
+            when (id) {
+                R.id.action_refresh -> {
+                    refresh()
+                }
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    fun refresh() {
         githubAction?.let {
+            setLoadingFrame(true)
             it.getPublicRepositories()
         }
     }
@@ -39,6 +69,7 @@ class MainActivity : AppCompatActivity(), RxViewDispatch {
     fun setRepoList(repoList: RealmResults<GitHubRepo>) {
         recyclerview.layoutManager = LinearLayoutManager(this)
         recyclerview.adapter = RepoAdapter(repoList)
+        setLoadingFrame(false)
     }
 
     override fun onRxViewUnRegistered() {
@@ -54,11 +85,13 @@ class MainActivity : AppCompatActivity(), RxViewDispatch {
                     }
                 }
                 else -> return
-
-
             }
         }
 
+    }
+
+    private fun setLoadingFrame(show: Boolean) {
+        progress_loading.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     override fun getRxStoreListToUnRegister(): MutableList<RxStore>? {
@@ -69,6 +102,7 @@ class MainActivity : AppCompatActivity(), RxViewDispatch {
     }
 
     override fun onRxError(error: RxError) {
+        setLoadingFrame(false)
     }
 
     override fun getRxStoreListToRegister(): MutableList<RxStore>? {
