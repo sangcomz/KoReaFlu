@@ -8,6 +8,5 @@ import com.hardsoftstudio.rxflux.action.RxAction
 interface Actions {
     fun getPublicRepositories()
 
-
     fun retry(action: RxAction): Boolean
 }
